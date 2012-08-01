@@ -1,0 +1,10 @@
+name = BC Language Permission
+description = British Council language permission 
+core = 6.x
+package = British Council
+dependencies[] = locale
+
+version = "6.x-1.x-dev"
+core = "6.x"
+datestamp = "1326076843"
+

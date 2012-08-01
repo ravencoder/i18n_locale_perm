@@ -1,0 +1,78 @@
+<?php
+define('BC_LOCALE_PERM_PREFIX', 'view site in lang ');
+
+/**
+ * Implementation of hook_init().
+ */
+function bc_locale_perm_init() {
+  global $language, $user;
+  $langcode = $language->language;
+  $default_language = language_default();
+  if ($langcode == $default_language->language) {
+    // We don't restrict default language.
+    return;
+  }
+
+  $cur_langcode = $langcode;
+  if (! user_access(BC_LOCALE_PERM_PREFIX . $langcode)) {  // Don't have the locale permission
+    // Switch to user default
+    $language = user_preferred_language($user, language_default());
+    $langcode = $language->language;
+    if (! user_access(BC_LOCALE_PERM_PREFIX . $langcode)) { // If don't have the locale permission of user default language
+      $language = language_default();
+      $langcode = $language->language;
+      /* Default language is not restricted
+      if (! user_access(BC_LOCALE_PERM_PREFIX . $langcode)) { // If don't event have the locale permission of default language
+        drupal_access_denied();
+        return;
+      }
+      */
+    }
+    $path = drupal_is_front_page() ? '<front>' : $_GET['q'];
+    $link = url($path, array('absolute' => TRUE));
+    // Get the translated link of current path and switch to it
+    $langs = language_list('enabled');
+    $links = array();
+    foreach ($langs[1] as $lang) {
+      $links[$lang->language] = array(
+          'href' => $path, 
+          'title' => $lang->native, 
+          'language' => $lang, 
+          'attributes' => array('class' => 'language-link'),
+          );
+    }
+    drupal_alter('translation_link', $links, $path);
+    drupal_goto($links[$langcode]['href']);
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function bc_locale_perm_perm() {
+  $bc_locale_permission = array();
+  $languages = language_list();
+  $default_language = language_default();
+  foreach ($languages as $langcode => $language) {
+    if ( ($language->enabled) && ($langcode != $default_language->language) ) {
+      $bc_locale_permission[] = BC_LOCALE_PERM_PREFIX . $langcode;
+    }
+  }
+  return($bc_locale_permission);
+}
+
+/**
+ * Implementation of hook_link_alter().
+ */
+function bc_locale_perm_translation_link_alter(&$links, $path) {
+  $output_links = array();
+  $default_language = language_default();
+  foreach($links as $langcode => $link) {
+    if ( ($langcode == $default_language->language) || (user_access(BC_LOCALE_PERM_PREFIX . $langcode)) ) {
+      $output_links[] = $link;
+      // $links[$langcode]['language']->enabled = FALSE;
+    }
+  }
+  $links = $output_links;
+}
+
