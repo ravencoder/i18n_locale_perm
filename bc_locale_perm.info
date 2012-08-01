@@ -1,10 +1,4 @@
-name = BC Language Permission
-description = British Council language permission 
-core = 6.x
-package = British Council
+name = i18n Language Permission
+description = i18n language permission 
+core = 7.x
 dependencies[] = locale
-
-version = "6.x-1.x-dev"
-core = "6.x"
-datestamp = "1326076843"
-
